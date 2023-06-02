@@ -10,34 +10,50 @@
 #define GLM_FORCE_RADIAN 
 #include <glm\glm.hpp> 
 #include <glm\gtc\matrix_transform.hpp> 
- 
+
+using namespace glm;
+
 class Camera 
 { 
     private: 
     
-        float FOV = 50.f;
+        float FOV = 1.0f;
         float width = 1920.f;
         float height = 1080.f;
         float nearPlane = 0.1f;
         float farPlane = 100.f;
 
-        glm::mat4 projectionMatrix; 
-        glm::mat4 viewMatrix; 
-        glm::mat4 ProjectionViewMatrix;
-        glm::vec3 position; 
-        glm::vec3 lookpoint; 
+        float sensitivity = 1.5;
+
+        bool is_following_mouse = true;
+
+        mat4 projectionMatrix; 
+        mat4 viewMatrix; 
+        mat4 ProjectionViewMatrix;
+        vec3 position; 
+        vec3 lookpoint; 
 
     public: 
         
-    void init(float FOV, float width, float height, float nearplane, float farPlane); 
+        void init(float FOV, float width, float height, float nearplane, float farPlane); 
         
-    void setCameraPosition(glm::vec3 _position); 
-    glm::mat4 getViewMatrix(); 
-    glm::mat4 getProjectionMatrix(); 
-    
-    void updateViewMatrix();
-    void updateProjectionMatrix();
-    void updateProjectionViewMatrix();
+        void setCameraPosition(vec3 _position); 
+        void lookAt(vec3 _position);
+
+        const vec3 getPosition() {return position;};
+
+        const mat4 getViewMatrix() {return viewMatrix;};
+        const mat4 getProjectionMatrix() {return projectionMatrix;};
+        const mat4 getProjectionViewMatrix() {return ProjectionViewMatrix;};
+        
+        void updateViewMatrix();
+        void updateProjectionMatrix();
+        const mat4 updateProjectionViewMatrix();
+
+        void updateMouseFollow(GLFWwindow *window);
+
+        void toggleMouseFollow(){is_following_mouse = !is_following_mouse;};
+        void setMouseFollow(bool enable){is_following_mouse = enable;};
 };
 
 #endif

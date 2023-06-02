@@ -81,25 +81,37 @@ void App::mainloop()
     glfwSetWindowPos(window, (mode->width - 1920) / 2, (mode->height - 1080) / 2);
 
     /// SETTING UP THE CAMERA 
-    // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-    glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float) 1920 / (float)1080, 0.1f, 100.0f);
-    
-    // Or, for an ortho camera :
-    //glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f); // In world coordinates
-    
-    glm::vec3 campos = glm::vec3(4,3,3);
+    camera.init(radians(150.0f), 1920.f, 1080.f, 0.1f, 100.0f);
 
-    // Camera matrix
-    glm::mat4 View = glm::lookAt(
-        campos, // Camera is at (4,3,3), in World Space
-        glm::vec3(0,0,0), // and looks at the origin
-        glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
-        );
+    camera.setCameraPosition(vec3(4.f, 3.f, 3.f));
+    camera.lookAt(vec3(0.f));
+
+
+
+
+    // // Or, for an ortho camera :
+    // //glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f); // In world coordinates
     
-    // Model matrix : an identity matrix (model will be at the origin)
-    glm::mat4 Model = glm::mat4(1.0f);
-    // Our ModelViewProjection : multiplication of our 3 matrices
-    glm::mat4 mvp = Projection * View * Model; // Remember, matrix multiplication is the other way around
+    // glm::vec3 campos = glm::vec3(4,3,3);
+
+    // // Camera matrix
+    // glm::mat4 View = glm::lookAt(
+    //     campos, // Camera is at (4,3,3), in World Space
+    //     glm::vec3(0,0,0), // and looks at the origin
+    //     glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
+    //     );
+    
+    // // Model matrix : an identity matrix (model will be at the origin)
+    // glm::mat4 Model = glm::mat4(1.0f);
+    // // Our ModelViewProjection : multiplication of our 3 matrices
+    // glm::mat4 mvp = Projection * View * Model; // Remember, matrix multiplication is the other way around
+
+
+
+
+
+
+
 
 
     /// CREATING A SHADER PROGRAM
@@ -109,8 +121,6 @@ void App::mainloop()
     test.activate();
     int winsizeh[2] = {1920/2, 1080/2};
     glUniform2iv(0, 1, winsizeh);
-    glUniformMatrix4fv(2, 1, GL_FALSE, &mvp[0][0]);
-    glUniform3fv(3, 1, &campos[0]);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -142,6 +152,8 @@ void App::mainloop()
     {
         glfwPollEvents();
 
+        camera.updateMouseFollow(window);
+
         if(glfwGetKey(window, GLFW_KEY_F5) == GLFW_PRESS)
         {
             system("cls");
@@ -150,7 +162,7 @@ void App::mainloop()
             test.activate();
             int winsize[2] = {1920, 1080};
             glUniform2iv(0, 1, winsize);
-            glUniformMatrix4fv(2, 1, GL_FALSE, &mvp[0][0]);
+
         }
 
         mainInput();
@@ -161,6 +173,8 @@ void App::mainloop()
         
 
         glUniform1f(1, (Get_time_ms()-timestart)*1.0/1000.0);
+        glUniformMatrix4fv(2, 1, GL_FALSE, &camera.updateProjectionViewMatrix()[0][0]);
+        glUniform3fv(3, 1, &camera.getPosition()[0]);
 
         // glDrawArrays(GL_TRIANGLES, 0, 6);
 
