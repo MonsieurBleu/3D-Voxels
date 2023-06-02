@@ -81,7 +81,7 @@ void App::mainloop()
     glfwSetWindowPos(window, (mode->width - 1920) / 2, (mode->height - 1080) / 2);
 
     /// SETTING UP THE CAMERA 
-    camera.init(radians(150.0f), 1920.f, 1080.f, 0.1f, 100.0f);
+    camera.init(radians(50.0f), 1920.f, 1080.f, 0.1f, 100.0f);
 
     camera.setCameraPosition(vec3(4.f, 3.f, 3.f));
     camera.lookAt(vec3(0.f));

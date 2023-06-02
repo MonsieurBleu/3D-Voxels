@@ -8,14 +8,17 @@
 
 using namespace glm;
 
-void Camera::init(float FOV, float width, float height, float nearplane, float farPlane)
+void Camera::init(float _FOV, float _width, float _height, float _nearPlane, float _farPlane)
 { 
- 
+    FOV = _FOV;
+    width = _width;
+    height = _height;
+    nearPlane = _nearPlane;
+    farPlane = _farPlane;
+
     position = vec3(0.0f, 0.0f, 4.0f); 
  
     lookpoint = vec3(0.0);
-
-    projectionMatrix = perspective(FOV, width / height, nearplane, farPlane); 
 } 
  
 void Camera::setCameraPosition(vec3 _position)
@@ -50,8 +53,8 @@ void Camera::updateMouseFollow(GLFWwindow *window)
 {
     if(!is_following_mouse) return;
 
-    int width, height;
-    glfwGetWindowSize(window, &width, &height);
+    // int width, height;
+    // glfwGetWindowSize(window, &width, &height);
     vec<2, double, glm::packed_highp> Mouse_uv;
     glfwGetCursorPos(window, &Mouse_uv.x, &Mouse_uv.y);
 
