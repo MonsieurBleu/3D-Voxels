@@ -5,7 +5,7 @@
 
 #include <Camera.hpp>
 #include <Shader.hpp>
-#include <Map.hpp>
+// #include <Map.hpp>
 
 struct fCoord3D
 {
@@ -26,7 +26,7 @@ class App
         GLFWwindow* window;
         uint64_t timestart;
 
-        Map World;
+        // Map World;
 
         Camera camera;
 

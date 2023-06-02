@@ -2,45 +2,49 @@
 #include <App.hpp>
 #include <tgmath.h>
 
-#define PI 3.14159265358979323846
+#include <Camera.hpp> 
 
-void Camera::update_direction()
+using namespace glm;
+
+void Camera::init(float FOV, float width, float height, float nearplane, float farPlane)
+{ 
+ 
+    position = vec3(0.0f, 0.0f, 4.0f); 
+ 
+    lookpoint = vec3(0.0);
+
+    projectionMatrix = perspective(FOV, width / height, nearplane, farPlane); 
+} 
+ 
+mat4 Camera::getViewMatrix()
+{ 
+   return viewMatrix; 
+} 
+mat4 Camera::getProjectionMatrix()
+{ 
+   return projectionMatrix; 
+} 
+ 
+void Camera::setCameraPosition(vec3 _position)
+{ 
+   position = _position; 
+} 
+
+void Camera::updateViewMatrix()
 {
-    if(mouse_follow)
-    {
-        int width, height;
-        glfwGetWindowSize(*window, &width, &height);
-
-        glfwGetCursorPos(*window, &Mouse_uv.x, &Mouse_uv.y);
-
-        float th = Mouse_uv.z*Mouse_uv.y*PI*(1.0/height); // polar theta of direction
-        float ph = Mouse_uv.z*Mouse_uv.x*PI*(1.0/width); // polar phi of direction
-
-        vec3<float> newdir(sin(th)*cos(ph), cos(th), sin(th)*sin(ph));
-        direction = newdir;
-
-        polar_direction[0] = th;
-        polar_direction[1] = ph;
-
-        // std::cout << direction << "\n";
-    }
+   viewMatrix = lookAt(
+        position, // Camera is at (4,3,3), in World Space
+        lookpoint, // and looks at the origin
+        vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
+        );
 }
 
-void Camera::move(vec3<float> velocity)
+void Camera::updateProjectionMatrix()
 {
-    float velmult = (Get_time_ms()-time_since_last_movement)*0.001f;
+    projectionMatrix = perspective(FOV, width / height, nearPlane, farPlane); 
+}
 
-	float thV, phV;
-	if(polar_direction[0] < 0.5*PI) {
-		thV = 0.5*PI - polar_direction[0];
-		phV = fmod(polar_direction[1] + PI, 2.0*PI);
-	} else {
-		thV = polar_direction[0] - 0.5*PI;
-		phV = polar_direction[1];
-	}
-	vec3<float> v(sin(thV)*cos(phV), cos(thV), sin(thV)*sin(phV));
-
-    position = position + direction * velocity.x * velmult 
-                        + cross(v, direction) * velocity.z * velmult
-                        + vec3<float>(0.f, velocity.y*velmult, 0.f);
+void Camera::updateProjectionViewMatrix()
+{
+    ProjectionViewMatrix = projectionMatrix*viewMatrix*mat4(1.0);
 }

@@ -2,9 +2,9 @@ CC = g++
 CPPFLAGS = -Wall -Ofast
 LIBFLAGS = -I include -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32 
 LINKFLAGS = libglfw3.a libglfw3dll.a 
-OBJ = obj/main.o obj/App.o obj/Utils.o obj/Shader.o obj/Camera.o obj/Octree.o obj/Map.o
+OBJ = obj/main.o obj/App.o obj/Utils.o obj/Shader.o obj/Camera.o
 INCLUDE = -Iinclude 
-EXEC = RTVox.exe
+EXEC = 3DVox.exe
 DEL_win = del /Q /F
 
 # g++ -o hellot.exe main.cpp libglfw3.a libglfw3dll.a -I include -L./ -lglew32 -lglfw3 -lopengl32 
