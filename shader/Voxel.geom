@@ -5,10 +5,9 @@ layout (triangle_strip, max_vertices = 128) out;
 
 layout (location = 0) uniform ivec2 iResolution;
 layout (location = 1) uniform float iTime;
-
 layout (location = 2) uniform mat4 MVP;
-
-layout (location = 3) uniform vec4 CameraPosition;
+layout (location = 3) uniform vec3 CameraPosition;
+layout (location = 4) uniform vec3 CameraDirection;
 
 in vec3 vp[];
 
@@ -88,16 +87,19 @@ void main()
 {
     float voxel_size = 1.0;
 
-    vertex_color = vec4(0.75, 0.5, 0.5, 1.0);
+    vec3 face_occlider = CameraPosition - vp[0];
 
-    vec4 Zp = vec4(vp[0], 1.0) + vec4(0.0, 0.0 , voxel_size, 0.0);
-    planeZ(Zp, voxel_size);
+    face_occlider = min(face_occlider + vec3(voxel_size), face_occlider - vec3(voxel_size));
 
     vertex_color = vec4(0.75);
-    vec4 Xp = vec4(vp[0], 1.0) + vec4(voxel_size, 0.0, 0.0, 0.0);
+    vec4 Xp = vec4(vp[0], 1.0) + vec4(voxel_size * sign(face_occlider.x), 0.0, 0.0, 0.0);
     planeX(Xp, voxel_size);
 
     vertex_color = vec4(0.5, 0.25, 0.5, 1.0);
-    vec4 Yp = vec4(vp[0], 1.0) + vec4(0.0, voxel_size, 0.0, 0.0);
+    vec4 Yp = vec4(vp[0], 1.0) + vec4(0.0, voxel_size * sign(face_occlider.y), 0.0, 0.0);
     planeY(Yp, voxel_size);
+
+    vertex_color = vec4(0.75, 0.5, 0.5, 1.0);
+    vec4 Zp = vec4(vp[0], 1.0) + vec4(0.0, 0.0 , voxel_size * sign(face_occlider .z), 0.0);
+    planeZ(Zp, voxel_size);
 }

@@ -26,12 +26,14 @@ class Camera
         float sensitivity = 1.5;
 
         bool is_following_mouse = true;
+        bool force_lookpoint = false;
 
         mat4 projectionMatrix; 
         mat4 viewMatrix; 
         mat4 ProjectionViewMatrix;
         vec3 position; 
         vec3 lookpoint; 
+        vec3 direction;
 
     public: 
         
@@ -41,6 +43,8 @@ class Camera
         void lookAt(vec3 _position);
 
         const vec3 getPosition() {return position;};
+        const vec3 getDirection() {return direction;};
+        const vec3 getLookpoint() {return lookpoint;};
 
         const mat4 getViewMatrix() {return viewMatrix;};
         const mat4 getProjectionMatrix() {return projectionMatrix;};
@@ -54,6 +58,11 @@ class Camera
 
         void toggleMouseFollow(){is_following_mouse = !is_following_mouse;};
         void setMouseFollow(bool enable){is_following_mouse = enable;};
+
+        void toggleForceLookPoint(){force_lookpoint = !force_lookpoint;};
+        void setForceLookPoint(bool enable){force_lookpoint = enable;};
+
+        void move(vec3 velocity, double deltatime);
 };
 
 #endif

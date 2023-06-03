@@ -95,3 +95,13 @@ uint64_t Get_time_ms()
 {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
+
+clockmicro::time_point last_deltatime;
+
+double Get_delta_time()
+{
+    clockmicro::time_point now = clockmicro::now();
+    duration delta = now - last_deltatime;
+    last_deltatime = now;
+    return delta.count() * 0.001;
+}

@@ -13,7 +13,7 @@ App::App(GLFWwindow* window) : window(window)
     timestart = Get_time_ms();
 }
 
-void App::mainInput()
+void App::mainInput(double deltatime)
 {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         state = quit;
@@ -22,34 +22,34 @@ void App::mainInput()
     if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         camspeed *= 10.0;
 
-    // vec3<float> velocity(0.0);
+    vec3 velocity(0.0);
 
-    // if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    // {
-    //     velocity.x += camspeed;
-    // }
-    // if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    // {
-    //     velocity.x -= camspeed;
-    // }
-    // if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    // {
-    //     velocity.z -= camspeed;
-    // }
-    // if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    // {
-    //     velocity.z += camspeed;
-    // }
-    // if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-    // {
-    //     velocity.y += camspeed;
-    // }
-    // if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-    // {
-    //     velocity.y -= camspeed;
-    // }
+    if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    {
+        velocity.x += camspeed;
+    }
+    if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    {
+        velocity.x -= camspeed;
+    }
+    if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        velocity.z -= camspeed;
+    }
+    if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+        velocity.z += camspeed;
+    }
+    if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+    {
+        velocity.y += camspeed;
+    }
+    if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+    {
+        velocity.y -= camspeed;
+    }
 
-    // camera.move(velocity);
+    camera.move(velocity, deltatime);
 
     // if(glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS)
     // {
@@ -84,34 +84,6 @@ void App::mainloop()
     camera.init(radians(50.0f), 1920.f, 1080.f, 0.1f, 100.0f);
 
     camera.setCameraPosition(vec3(4.f, 3.f, 3.f));
-    camera.lookAt(vec3(0.f));
-
-
-
-
-    // // Or, for an ortho camera :
-    // //glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f); // In world coordinates
-    
-    // glm::vec3 campos = glm::vec3(4,3,3);
-
-    // // Camera matrix
-    // glm::mat4 View = glm::lookAt(
-    //     campos, // Camera is at (4,3,3), in World Space
-    //     glm::vec3(0,0,0), // and looks at the origin
-    //     glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
-    //     );
-    
-    // // Model matrix : an identity matrix (model will be at the origin)
-    // glm::mat4 Model = glm::mat4(1.0f);
-    // // Our ModelViewProjection : multiplication of our 3 matrices
-    // glm::mat4 mvp = Projection * View * Model; // Remember, matrix multiplication is the other way around
-
-
-
-
-
-
-
 
 
     /// CREATING A SHADER PROGRAM
@@ -126,15 +98,37 @@ void App::mainloop()
 
 
     /// CREATINHG VBO
+    uint64 voxel_grid_size = 10;
+    uint64 voxelcnt = voxel_grid_size*voxel_grid_size*voxel_grid_size;  
+    uint64 voxel_elem_nb = 3;
+    float voxel_spacement = 2.0;
+    uint64 buffer_size = voxelcnt*voxel_elem_nb;
+
     GLuint vbo;
     glGenBuffers(1, &vbo);
 
-    float points[] = {
-        0.0f,  0.0f,
-    };
+    float *points = new float[buffer_size];
+
+    int id = 0;
+    for(uint64 v = 0; v < buffer_size; v += voxel_elem_nb, id ++)
+    {
+        points[v] = id%voxel_grid_size * voxel_spacement;
+
+        points[v+1] = (id/voxel_grid_size)%voxel_grid_size * voxel_spacement;
+
+        points[v+2] = id/(voxel_grid_size*voxel_grid_size) * voxel_spacement;
+
+        // points[v] = id * voxel_spacement;
+
+        // points[v+1] = 0.0;
+
+        // points[v+2] = 0.0;
+    
+        // std::cout << id << " : " << points[v] << " " << points[v+1] << " " << points[v+2] << "\n";
+    }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER,  buffer_size, points, GL_STATIC_DRAW);
 
     // Création du VAO
     GLuint vao;
@@ -142,14 +136,16 @@ void App::mainloop()
     glBindVertexArray(vao);
 
     // Spécification de l'agencement des données
-    GLint posAttrib = glGetAttribLocation(test.get_program(), "pos");
+    GLint posAttrib = glGetAttribLocation(test.get_program(), "Voxel_Position");
     glEnableVertexAttribArray(posAttrib);
-    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(posAttrib, voxel_elem_nb, GL_FLOAT, GL_FALSE, 0, 0);
 
 
     /// MAIN LOOP
     while(state != quit)
     {
+        double delta_time = Get_delta_time();
+
         glfwPollEvents();
 
         camera.updateMouseFollow(window);
@@ -162,23 +158,25 @@ void App::mainloop()
             test.activate();
             int winsize[2] = {1920, 1080};
             glUniform2iv(0, 1, winsize);
-
         }
 
-        mainInput();
+        mainInput(delta_time);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         // glClear(GL_COLOR_BUFFER_BIT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
         
+        test.activate();
+        glBindVertexArray(vao);
 
         glUniform1f(1, (Get_time_ms()-timestart)*1.0/1000.0);
         glUniformMatrix4fv(2, 1, GL_FALSE, &camera.updateProjectionViewMatrix()[0][0]);
         glUniform3fv(3, 1, &camera.getPosition()[0]);
+        glUniform3fv(4, 1, &camera.getDirection()[0]);
 
         // glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        glDrawArrays(GL_POINTS, 0, 1);
+        glDrawArrays(GL_POINTS, 0, buffer_size);
 
         glfwSwapBuffers(window);
     }

@@ -30,7 +30,7 @@ class App
 
         Camera camera;
 
-        void mainInput();
+        void mainInput(double deltatime);
 
     public :
         App(GLFWwindow* window);

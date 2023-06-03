@@ -1,8 +1,11 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
+#include <iostream>
+
 #include <string>
 #include <chrono>
+
 
 /// TERMINAL
 const std::string TERMINAL_ERROR    = "\e[1;31m"; //"\033[91m";
@@ -28,8 +31,40 @@ void startbenchrono();
 void endbenchrono();
 uint64_t Get_time_ms();
 
+double Get_delta_time();
+
 /// HEAP CORRUPTION
 void checkHeap();
 
+
+/// VECTORS
+
+// #include <glm/glm.hpp>
+// #include <glm/gtx/string_cast.hpp>
+
+// std::ostream& operator<<(std::ostream& os, const glm::vec2& u)
+// {
+//     os << "vec2(" << u.x << ", " << u.y << ")";
+//     return os;
+// };
+
+// std::ostream& operator<<(std::ostream& os, const glm::vec3& u)
+// {
+//     os << "vec2(" << u.x << ", " << u.y << "," << u.z << ")";
+//     return os;
+// };
+
+// std::ostream& operator<<(std::ostream& os, const glm::vec4& u)
+// {
+//     os << "vec2(" << u.x << ", " << u.y << ", " << u.z << ", " << u.w << ")";
+//     return os;
+// };
+
+
+// template<typename genType>
+// std::ostream& operator<<(std::ostream& out, const genType& g)
+// {
+//     return out << glm::to_string(g);
+// }
 
 #endif
