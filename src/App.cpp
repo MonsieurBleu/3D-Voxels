@@ -81,16 +81,19 @@ void App::mainloop()
     glfwSetWindowPos(window, (mode->width - 1920) / 2, (mode->height - 1080) / 2);
 
     /// SETTING UP THE CAMERA 
-    camera.init(radians(50.0f), 1920.f, 1080.f, 0.1f, 100.0f);
+    camera.init(radians(50.0f), 1920.f, 1080.f, 0.1f, 1000.0f);
 
     camera.setCameraPosition(vec3(4.f, 3.f, 3.f));
+    // camera.setForceLookPoint(true);
+    // camera.lookAt(vec3(0.0));
 
 
     /// CREATING A SHADER PROGRAM
     // ShaderProgram test("shader/test.frag", "shader/test.vert", "");
-    ShaderProgram test("shader/Voxel.frag", "shader/Voxel.vert", "shader/Voxel.geom");
+    // ShaderProgram test("shader/Voxel.frag", "shader/Voxel.vert", "shader/Voxel.geom");
+    ShaderProgram shader("shader/Voxel.frag", "shader/InstancedVoxel.vert", "");
 
-    test.activate();
+    shader.activate();
     int winsizeh[2] = {1920/2, 1080/2};
     glUniform2iv(0, 1, winsizeh);
 
@@ -98,37 +101,60 @@ void App::mainloop()
 
 
     /// CREATINHG VBO
-    uint64 voxel_grid_size = 10;
-    uint64 voxelcnt = voxel_grid_size*voxel_grid_size*voxel_grid_size;  
-    uint64 voxel_elem_nb = 3;
-    float voxel_spacement = 2.0;
-    uint64 buffer_size = voxelcnt*voxel_elem_nb;
-
     GLuint vbo;
     glGenBuffers(1, &vbo);
 
-    float *points = new float[buffer_size];
-
-    int id = 0;
-    for(uint64 v = 0; v < buffer_size; v += voxel_elem_nb, id ++)
+    float voxel_size = 0.5;
+    float points[] = 
     {
-        points[v] = id%voxel_grid_size * voxel_spacement;
+        // X FACES
+        -voxel_size, voxel_size, voxel_size,
+        -voxel_size, voxel_size, -voxel_size,
+        -voxel_size, -voxel_size, voxel_size,
+        -voxel_size, -voxel_size, -voxel_size,
+        -voxel_size, voxel_size, -voxel_size,
+        -voxel_size, -voxel_size, voxel_size,
 
-        points[v+1] = (id/voxel_grid_size)%voxel_grid_size * voxel_spacement;
+        voxel_size, voxel_size, voxel_size,
+        voxel_size, voxel_size, -voxel_size,
+        voxel_size, -voxel_size, voxel_size,
+        voxel_size, -voxel_size, -voxel_size,
+        voxel_size, voxel_size, -voxel_size,
+        voxel_size, -voxel_size, voxel_size,
 
-        points[v+2] = id/(voxel_grid_size*voxel_grid_size) * voxel_spacement;
+        // Y FACES
+        voxel_size, voxel_size, voxel_size,
+        voxel_size, voxel_size, -voxel_size,
+        -voxel_size, voxel_size, voxel_size,
+        -voxel_size, voxel_size, -voxel_size,
+        voxel_size, voxel_size, -voxel_size,
+        -voxel_size, voxel_size, voxel_size,
 
-        // points[v] = id * voxel_spacement;
-
-        // points[v+1] = 0.0;
-
-        // points[v+2] = 0.0;
+        voxel_size, -voxel_size, voxel_size,
+        voxel_size, -voxel_size, -voxel_size,
+        -voxel_size, -voxel_size, voxel_size,
+        -voxel_size, -voxel_size, -voxel_size,
+        voxel_size, -voxel_size, -voxel_size,
+        -voxel_size, -voxel_size, voxel_size,
     
-        // std::cout << id << " : " << points[v] << " " << points[v+1] << " " << points[v+2] << "\n";
-    }
+        // Z FACES
+        voxel_size, voxel_size, voxel_size,
+        voxel_size, -voxel_size, voxel_size,
+        -voxel_size, voxel_size, voxel_size,
+        -voxel_size, -voxel_size, voxel_size,
+        voxel_size, -voxel_size, voxel_size,
+        -voxel_size, voxel_size, voxel_size,
+
+        voxel_size, voxel_size, -voxel_size,
+        voxel_size, -voxel_size, -voxel_size,
+        -voxel_size, voxel_size, -voxel_size,
+        -voxel_size, -voxel_size, -voxel_size,
+        voxel_size, -voxel_size, -voxel_size,
+        -voxel_size, voxel_size, -voxel_size,
+    };
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER,  buffer_size, points, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER,  sizeof(points), points, GL_STATIC_DRAW);
 
     // Création du VAO
     GLuint vao;
@@ -136,9 +162,41 @@ void App::mainloop()
     glBindVertexArray(vao);
 
     // Spécification de l'agencement des données
-    GLint posAttrib = glGetAttribLocation(test.get_program(), "Voxel_Position");
+    GLint posAttrib = glGetAttribLocation(shader.get_program(), "Vpos");
     glEnableVertexAttribArray(posAttrib);
-    glVertexAttribPointer(posAttrib, voxel_elem_nb, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+
+
+    /// CREATING INSTANCED OFFSETS
+    GLuint pbo;
+    glGenBuffers(1, &pbo);
+    glBindBuffer(GL_ARRAY_BUFFER, pbo);
+
+    int voxel_elem_nb = 3;
+    uint32 grid_size = 50;
+    uint32 instanced_cnt = grid_size*grid_size*grid_size;
+    float offsets[instanced_cnt*voxel_elem_nb];
+    uint32 index = 0;
+
+    float voxel_spacement = 3.0;
+
+    for(uint32 X = 0; X < grid_size; X++)
+    for(uint32 Y = 0; Y < grid_size; Y++)
+    for(uint32 Z = 0; Z < grid_size; Z++)
+    {
+        offsets[index] = X*voxel_spacement;
+        offsets[index+1] = Y*voxel_spacement;
+        offsets[index+2] = Z*voxel_spacement;
+
+        index += voxel_elem_nb;
+    }
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(offsets), offsets, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat), 0);
+    glVertexAttribDivisor(1, 1); // This sets the vertex attribute to instanced attribute.
+
 
 
     /// MAIN LOOP
@@ -153,9 +211,9 @@ void App::mainloop()
         if(glfwGetKey(window, GLFW_KEY_F5) == GLFW_PRESS)
         {
             system("cls");
-            glDeleteProgram(test.get_program());
-            test.CompileAndLink();
-            test.activate();
+            glDeleteProgram(shader.get_program());
+            shader.CompileAndLink();
+            shader.activate();
             int winsize[2] = {1920, 1080};
             glUniform2iv(0, 1, winsize);
         }
@@ -166,7 +224,8 @@ void App::mainloop()
         // glClear(GL_COLOR_BUFFER_BIT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
         
-        test.activate();
+        shader.activate();
+
         glBindVertexArray(vao);
 
         glUniform1f(1, (Get_time_ms()-timestart)*1.0/1000.0);
@@ -176,7 +235,9 @@ void App::mainloop()
 
         // glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        glDrawArrays(GL_POINTS, 0, buffer_size);
+        // glDrawArrays(GL_POINTS, 0, buffer_size);
+
+        glDrawArraysInstanced(GL_TRIANGLES, 0, sizeof(points)/3, instanced_cnt);
 
         glfwSwapBuffers(window);
     }
